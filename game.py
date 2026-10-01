@@ -4,8 +4,11 @@ from board import Board
 class Game:
     def __init__(self):
         self.board = Board()
-        self.best_score = 0
-        self.history = []
+        self.score = 0
+
+        self.previous_grid = None
+        self.previous_score = 0
+        self.best_score = self.score
 
     def display(self):
         print("\n" + "+------+------+------+------+")
@@ -21,23 +24,44 @@ class Game:
         return not self.board.can_move()
 
     def move(self, key):
-        def move(self, key):
-            moves = {
-                "a": self.board.move_left,
-                "d": self.board.move_right,
-                "w": self.board.move_up,
-                "s": self.board.move_down
-            }
+        moves = {
+            "a": self.board.move_left,
+            "d": self.board.move_right,
+            "w": self.board.move_up,
+            "s": self.board.move_down
+        }
 
-            if key not in moves:
-                return False
+        if key not in moves:
+            return False
 
-            changed = moves[key]()
+        # Save current state before attempting the move
+        old_grid = [row[:] for row in self.board.grid]
+        old_score = self.score
 
-            if changed:
-                self.board.add_random_tile()
+        changed = moves[key]()
 
-            return changed
+        # Only a successful move creates/updates undo state
+        if changed:
+            self.previous_grid = old_grid
+            self.previous_score = old_score
+
+            self.board.add_random_tile()
+
+            self.best_score = max(self.best_score, self.score)
+
+        return changed
+
+    def undo(self):
+        if self.previous_grid is None:
+            return False
+
+        self.board.grid = [row[:] for row in self.previous_grid]
+        self.score = self.previous_score
+
+        # One-level undo: consume the saved state
+        self.previous_grid = None
+
+        return True
 
     def run(self):
         print("2048 — W/A/S/D to move, U to undo, Q to quit.")
@@ -55,8 +79,8 @@ class Game:
             if key == "q":
                 return
             if key == "u":
-                print("Undo is not implemented yet.")
-                continue
+                self.undo()
+            
             if key not in "wasd":
                 print("Use W/A/S/D.")
                 continue
