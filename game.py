@@ -14,24 +14,41 @@ class Game:
             print("+------+------+------+------+")
         print("Score:", self.board.score, " Best:", self.best_score)
 
+    def has_won(self):
+        return any(2048 in row for row in self.board.grid)
+
+    def is_game_over(self):
+        return not self.board.can_move()
+
     def move(self, key):
-        moves = {"a": self.board.move_left, "d": self.board.move_right,
-                 "w": self.board.move_up, "s": self.board.move_down}
-        if key not in moves:
-            return False
-        changed = moves[key]()
-        if changed:
-            self.board.add_random_tile()
-        return changed
+        def move(self, key):
+            moves = {
+                "a": self.board.move_left,
+                "d": self.board.move_right,
+                "w": self.board.move_up,
+                "s": self.board.move_down
+            }
+
+            if key not in moves:
+                return False
+
+            changed = moves[key]()
+
+            if changed:
+                self.board.add_random_tile()
+
+            return changed
 
     def run(self):
         print("2048 — W/A/S/D to move, U to undo, Q to quit.")
         while True:
             self.display()
-            if any(2048 in row for row in self.board.grid):
+
+            if self.has_won():
                 print("You reached 2048!")
                 return
-            if not self.board.can_move():
+
+            if self.is_game_over():
                 print("No legal moves remain.")
                 return
             key = input("> ").strip().lower()
